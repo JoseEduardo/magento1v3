@@ -81,6 +81,10 @@
                         <title>getAllSimpleByConfigurable</title>
                         <acl>apiextension/product_configurable_getAllSimpleByConfigurable</acl>
                     </getAllSimpleByConfigurable>
+                    <getConfigurableProductOptions translate="title" module="apiextension">>
+                        <title>getConfigurableProductOptions</title>
+                        <acl>apiextension/product_configurable_getConfigurableProductOptions</acl>
+                    </getConfigurableProductOptions>
                 </methods>
                 <faults module="apiextension">
                     <data_invalid>

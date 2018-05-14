@@ -99,13 +99,37 @@ class Anymarket_ApiExtension_Model_Product_Configurable extends Mage_Catalog_Mod
         $childProducts = Mage::getModel('catalog/product_type_configurable')
                             ->getChildrenIds($product->getId());
         $jsonRet = array();
-        foreach ($childProducts as $key => $value) {
+        foreach ($childProducts[0] as $value) {
             array_push($jsonRet, $value);
         }
 
         return $jsonRet;
     }
 
+    public function getConfigurableProductOptions($sku)
+    {
+        $product = Mage::getModel('catalog/product')->loadByAttribute('sku', $sku);
+        if($product == null) {
+            return array();
+        }
+
+        $productAttributeOptions = $product->getTypeInstance(true)->getConfigurableAttributesAsArray($product);
+        $attributeOptions = array();
+        foreach ($productAttributeOptions as $productAttribute) {
+            $arrTmp = array("attributeCode" => $productAttribute['attribute_code'],
+                            "label" => $productAttribute['label']
+                            );
+            $arrValue = array();
+            foreach ($productAttribute['values'] as $attribute) {
+                $value = array("label" => $attribute['store_label'], "valueIndex" => $attribute['value_index']);
+                array_push($arrValue, $value);
+            }
+            $arrTmp['values'] = $arrValue;
+            array_push($attributeOptions, $arrTmp);
+        }
+
+        return $attributeOptions;
+    }
     
     protected function loadProduct($sku, $type)
     {
