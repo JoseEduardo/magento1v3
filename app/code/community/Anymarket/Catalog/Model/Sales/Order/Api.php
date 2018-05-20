@@ -200,9 +200,6 @@ class Anymarket_Catalog_Model_Sales_Order_Api extends Mage_Sales_Model_Order_Api
 	 * @return Ambigous <mixed, NULL, multitype:>
 	 */
 	public function createEx($data) {
-		//Mage::log('Create sales Order Ex '. var_export($data, true));
-		//return null;
-		
 		$customer_id = $data['customer_id'];
 		
 		$customer = Mage::getModel('customer/customer')->load($customer_id);/*$customerId is the id of the customer who is placing the order, it can be passed as an argument to the function place()*/
@@ -254,15 +251,13 @@ class Anymarket_Catalog_Model_Sales_Order_Api extends Mage_Sales_Model_Order_Api
 			->setPostcode($newbilling['postcode'])
 			->setTelephone($newbilling['telephone']);
 		$order->setBillingAddress($billingAddress);
-		Mage::log('billing address has been setted '. var_export($newbilling, true));
-		//return null;
+
 		// set shipping address
 		$shipping = $customer->getDefaultShippingAddress();
 		if ($shipping == null)
 			throw new Exception("Customer #{$customer_id} default shipping address must not be empty.");
 		
 		$shipping = $data['shippingAddress'];
-		Mage::log("sales_order.createEx with shipping Address ". var_export($shipping, true));
 		$shippingAddress = Mage::getModel('sales/order_address')
 			->setStoreId($storeId)
 			->setAddressType(Mage_Sales_Model_Quote_Address::TYPE_SHIPPING)
@@ -278,7 +273,6 @@ class Anymarket_Catalog_Model_Sales_Order_Api extends Mage_Sales_Model_Order_Api
 			->setPostcode($shipping['postcode'])
 			->setTelephone($shipping['telephone']);
 		
-		//var_dump($shippingAddress);
 		$order->setShippingAddress($shippingAddress)
 			->setShippingMethod(!empty($data['shipping_method']) ? $data['shipping_method'] : 'flatrate_flatrate')
 			->setShippingDescription(!empty($data['shipping_description']) ? $data['shipping_description'] : 'Flat Rate - Fixed');
@@ -291,8 +285,9 @@ class Anymarket_Catalog_Model_Sales_Order_Api extends Mage_Sales_Model_Order_Api
 		$orderPayment = Mage::getModel('sales/order_payment')
 			->setStoreId($storeId)
 			->setCustomerPaymentId(0)
-			->setMethod('banktransfer'); // ->setMethod('banktransfer');//->setMethod('purchaseorder') // ->setMethod('checkmo');
-			//->setPo_number('-');
+			->setMethod($data['payment_method'])
+			->setAdditionalInformation('metodo', $data['payment_description'])
+			->setPo_number('-');
 		$order->setPayment($orderPayment);
 		
 		// Set sales order status to 'complete'
@@ -303,7 +298,7 @@ class Anymarket_Catalog_Model_Sales_Order_Api extends Mage_Sales_Model_Order_Api
 		$products = $data["items"];
 		foreach ($products as $productId=>$product) {
 			$_product = Mage::getModel('catalog/product')->load($product['product_id']);
-			$rowTotal = $_product->getPrice() * $product['qty'];
+			$rowTotal = $product['price'] * $product['qty'];
 			$orderItem = Mage::getModel('sales/order_item')
 				->setStoreId($storeId)
 				->setQuoteItemId(0)
@@ -315,8 +310,8 @@ class Anymarket_Catalog_Model_Sales_Order_Api extends Mage_Sales_Model_Order_Api
 				->setQtyOrdered($product['qty'])
 				->setName($_product->getName())
 				->setSku($_product->getSku())
-				->setPrice($_product->getPrice())
-				->setBasePrice($_product->getPrice())
+				->setPrice($product['price'])
+				->setBasePrice($product['price'])
 				->setOriginalPrice($_product->getPrice())
 				->setRowTotal($rowTotal)
 				->setBaseRowTotal($rowTotal);
@@ -365,12 +360,10 @@ class Anymarket_Catalog_Model_Sales_Order_Api extends Mage_Sales_Model_Order_Api
 		// This eventually decreases the stock on Manage Stock=Yes products, observed by Mage_CatalogInventory
 		Mage::dispatchEvent('checkout_submit_all_after', array('order' => $order, 'quote' => $quote));
 		// do index for cataloginventory_stock
-		Mage::log("Reindexing product stock status");
 		$stockIndexer = Mage::getSingleton('index/indexer')->getProcessByCode('cataloginventory_stock');
 		$stockIndexer->reindexEverything();
-// 		return $order;
+
 		$orderId = $order->getIncrementId();
-		Mage::log("Created Sales Order {$order->getId()} #{$order->getIncrementId()}"); 
 		return $orderId;
 	}
 	
