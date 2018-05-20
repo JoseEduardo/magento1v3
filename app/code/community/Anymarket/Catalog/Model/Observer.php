@@ -48,5 +48,43 @@
 	    }
 
 
+		/**
+	     * @param $observer
+		 * @return array
+	     */
+	    public function sendProdAnyMarket($observer) {
+	        if( $observer->getEvent()->getProduct() ) {
+	        	$productId = $observer->getEvent()->getProduct()->getId();
+	            $storeID   = $observer->getEvent()->getProduct()->getStoreId();
+
+	            $product = Mage::getModel('catalog/product')->setStoreId($storeID)->load($productId);
+
+				$host  = Mage::getStoreConfig('anymarket_new_section/anymarket_new_access_group/anymarket_new_host_field', $storeID);
+				$oi  = Mage::getStoreConfig('anymarket_new_section/anymarket_new_access_group/anymarket_new_oi_field', $storeID);
+
+				$host = $host."/public/api/anymarketcallback/product/" . $oi . "/MAGENTO_1/" . $storeID . "/" . $product->getSku();
+		        $this->doCallAnymarket($host);
+	        }
+	  	}
+
+		/**
+	     * @param $observer
+		 * @return array
+	     */
+	    public function catalogInventorySave($observer) {
+			$productId = $observer->getEvent()->getItem()->getProductId();
+            $storeID   = $observer->getEvent()->getItem()->getStoreId();
+
+			$product = Mage::getModel('catalog/product')->load($productId);
+
+			$host  = Mage::getStoreConfig('anymarket_new_section/anymarket_new_access_group/anymarket_new_host_field', $storeID);
+			$oi  = Mage::getStoreConfig('anymarket_new_section/anymarket_new_access_group/anymarket_new_oi_field', $storeID);
+
+			$host = $host."/public/api/anymarketcallback/stockPrice/".$oi."/".$product->getSku();
+	        $this->doCallAnymarket($host);
+
+
+	  	}
+
 	}
 ?>
