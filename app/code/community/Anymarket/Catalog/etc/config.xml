@@ -31,6 +31,16 @@
             </sales>
         </models>
         <events>
+            <sales_order_save_commit_after>
+                <observers>
+                    <sales_order_save_commit_after_handler>
+                        <type>singleton</type>
+                        <class>Anymarket_Catalog_Model_Observer</class>
+                        <method>updateOrderAnyMarketObs</method>
+                    </sales_order_save_commit_after_handler>
+                </observers>
+            </sales_order_save_commit_after>
+
             <sales_order_place_after>
                 <observers>
                     <sales_order_place_after_handler>
